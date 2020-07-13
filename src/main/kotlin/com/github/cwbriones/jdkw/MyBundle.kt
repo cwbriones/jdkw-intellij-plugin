@@ -1,4 +1,4 @@
-package com.github.cwbriones.jdkwintellijplugin
+package com.github.cwbriones.jdkw
 
 import com.intellij.AbstractBundle
 import org.jetbrains.annotations.NonNls

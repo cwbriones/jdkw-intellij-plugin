@@ -1,19 +1,24 @@
 <idea-plugin>
-    <id>com.github.cwbriones.jdkwintellijplugin</id>
-    <name>jdkw-intellij-plugin</name>
+    <id>com.github.cwbriones</id>
+    <name>jdkw-intellij</name>
     <vendor>cwbriones</vendor>
 
     <!-- Product and plugin compatibility requirements -->
     <!-- https://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html -->
     <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.lang</depends>
+    <depends>com.intellij.modules.java</depends>
 
     <extensions defaultExtensionNs="com.intellij">
-        <applicationService serviceImplementation="com.github.cwbriones.jdkwintellijplugin.services.MyApplicationService"/>
-        <projectService serviceImplementation="com.github.cwbriones.jdkwintellijplugin.services.MyProjectService"/>
+        <projectService serviceImplementation="com.github.cwbriones.jdkw.services.JdkWrapperService"/>
+        <postStartupActivity implementation="com.github.cwbriones.jdkw.listeners.JdkWrapperListener"/>
     </extensions>
-
     <projectListeners>
-        <listener class="com.github.cwbriones.jdkwintellijplugin.listeners.MyProjectManagerListener"
-                  topic="com.intellij.openapi.project.ProjectManagerListener"/>
     </projectListeners>
+    <actions>
+        <action id="com.github.cwbriones.jdkw.actions.ImportJdk" class="com.github.cwbriones.jdkw.actions.ImportJdk"
+            text="Import Settings from JDK Wrapper" description="Infer and import JDK from jdk-wrapper.sh">
+            <add-to-group group-id="ToolsMenu" anchor="last" />
+        </action>
+    </actions>
 </idea-plugin>
