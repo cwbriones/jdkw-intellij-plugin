@@ -1,6 +1,7 @@
 package com.github.cwbriones.jdkw.services
 
 import com.github.cwbriones.jdkw.MyBundle
+import com.github.cwbriones.jdkw.Notifier
 import com.github.cwbriones.jdkw.ext.getLogger
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.filters.TextConsoleBuilderFactory
@@ -32,23 +33,19 @@ class JdkWrapperService(private val project: Project) {
         println(MyBundle.message("projectService", project.name))
     }
 
-    fun onOpen() {
-        print("Project @ ${project.guessProjectDir()}")
-        inferProjectJdk(project.guessProjectDir()!!) {
-            val sdk = importJdk(it)
+    fun configureJdkForProject(sdk: Sdk) {
             SdkConfigurationUtil.setDirectoryProjectSdk(project, sdk)
             val languageLevelExt = LanguageLevelProjectExtension.getInstance(project)
             val languageLevel = languageLevelFromSdk(sdk)
             if (languageLevel != null) {
                 languageLevelExt.languageLevel = languageLevel
             }
-        }
     }
 
     private fun languageLevelFromSdk(sdk: Sdk): LanguageLevel? =
             JavaSdk.getInstance().getVersion(sdk)?.maxLanguageLevel
 
-    private fun inferProjectJdk(contentRoot: VirtualFile, callback: (String) -> Unit) {
+    fun inferJdk(contentRoot: VirtualFile, callback: (String) -> Unit) {
         println("looking for jdk-wrapper.sh")
         logger.info("looking for jdk-wrapper.sh")
         val jdkWrapper = contentRoot.findChild("jdk-wrapper.sh")
@@ -61,12 +58,11 @@ class JdkWrapperService(private val project: Project) {
 
             val handler = OSProcessHandler(commandLine)
 
-            val console =
-                    TextConsoleBuilderFactory
-                            .getInstance()
-                            .createBuilder(project)
-                            .console
-                            .attachToProcess(handler)
+            TextConsoleBuilderFactory
+                    .getInstance()
+                    .createBuilder(project)
+                    .console
+                    .attachToProcess(handler)
 
             val allText = mutableListOf<String>()
             handler.startNotify()
@@ -93,24 +89,15 @@ class JdkWrapperService(private val project: Project) {
         println("nada")
     }
 
-    private fun importJdk(javaHomePath: String): Sdk {
-        val jdkService = service<ProjectJdkTable>()
-        val matchingJdk = jdkService.allJdks.find {
-            it.homePath == javaHomePath
-        }
-        if (matchingJdk != null) {
-            return matchingJdk
-        }
-        println("No matching JDK found at path: ${javaHomePath}, importing.")
-        val javaHomeFile = File(javaHomePath)
+    fun findExistingJdk(javaHomePath: String): Sdk? =
+            service<ProjectJdkTable>().allJdks.find {
+                it.homePath == javaHomePath
+            }
 
-        if (!javaHomeFile.exists()) {
-            throw IllegalStateException("Why does the path not exist")
-        }
-
+    fun importJdk(javaHomePath: String): Sdk {
         val javaHome = writeAction {
-            LocalFileSystem.getInstance().refreshAndFindFileByIoFile(javaHomeFile)
-        } ?: throw FileNotFoundException("Nada")
+            LocalFileSystem.getInstance().refreshAndFindFileByIoFile(File(javaHomePath))
+        } ?: throw FileNotFoundException("Unable to locate java home directory")
 
         val javaSdkType = JavaSdk.getInstance()
         val sdk = SdkConfigurationUtil.setupSdk(
@@ -122,7 +109,6 @@ class JdkWrapperService(private val project: Project) {
                 javaSdkType.suggestSdkName(null, javaHome.canonicalPath)
         ) ?: throw IllegalStateException("Unable to setup JDK")
         SdkConfigurationUtil.addSdk(sdk)
-        println("added")
         return sdk
     }
 

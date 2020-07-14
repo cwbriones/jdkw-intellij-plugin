@@ -17,7 +17,7 @@
     </projectListeners>
     <actions>
         <action id="com.github.cwbriones.jdkw.actions.ImportJdk" class="com.github.cwbriones.jdkw.actions.ImportJdk"
-            text="Import Settings from JDK Wrapper" description="Infer and import JDK from jdk-wrapper.sh">
+            text="Import Wrapper JDK" description="Infer and import JDK from jdk-wrapper.sh">
             <add-to-group group-id="ToolsMenu" anchor="last" />
         </action>
     </actions>
