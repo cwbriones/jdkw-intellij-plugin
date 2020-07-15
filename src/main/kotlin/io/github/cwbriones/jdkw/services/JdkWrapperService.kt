@@ -16,6 +16,7 @@ import com.intellij.openapi.projectRoots.Sdk
 import com.intellij.openapi.projectRoots.SdkType
 import com.intellij.openapi.projectRoots.impl.SdkConfigurationUtil
 import com.intellij.openapi.roots.LanguageLevelProjectExtension
+import com.intellij.openapi.util.Computable
 import com.intellij.openapi.util.Key
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFile
@@ -23,12 +24,24 @@ import com.intellij.pom.java.LanguageLevel
 import io.github.cwbriones.jdkw.getLogger
 import java.io.File
 import java.io.FileNotFoundException
+import java.security.MessageDigest
 
 data class JdkWrapperConfig(val javaHome: String)
 
 class JdkWrapperService(private val project: Project) {
     companion object {
         val logger = getLogger<JdkWrapperService>()
+    }
+
+    fun usesWrapper(contentRoot: VirtualFile) = contentRoot.findChild("jdk-wrapper.sh")?.exists() ?: false
+
+    fun jdkwId(contentRoot: VirtualFile): String {
+        val jdkw= contentRoot.findChild(".jdkw") ?: return ""
+        val contents = ApplicationManager.getApplication().runReadAction(Computable<ByteArray>(jdkw::contentsToByteArray))
+        val shaDigest = MessageDigest.getInstance("SHA-256")
+        return shaDigest.digest(contents).joinToString("") {
+            String.format("%02x", it)
+        }
     }
 
     fun configureJdkForProject(sdk: Sdk) {
@@ -43,6 +56,12 @@ class JdkWrapperService(private val project: Project) {
     private fun languageLevelFromSdk(sdk: Sdk): LanguageLevel? =
         JavaSdk.getInstance().getVersion(sdk)?.maxLanguageLevel
 
+    /**
+     * Determine the configured JDK by running the jdk-wrapper and examining the results.
+     *
+     * Since this executes the wrapper, it could potentially trigger a network fetch of the
+     * distribution if it's not already on the system.
+     */
     fun inferWrapperConfig(contentRoot: VirtualFile, callback: (JdkWrapperConfig) -> Unit) {
         logger.info("looking for jdk-wrapper.sh")
         val jdkWrapper = contentRoot.findChild("jdk-wrapper.sh")

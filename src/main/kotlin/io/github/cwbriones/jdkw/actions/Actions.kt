@@ -7,6 +7,7 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.project.guessProjectDir
 import io.github.cwbriones.jdkw.Bundle
 import io.github.cwbriones.jdkw.Notifier
+import io.github.cwbriones.jdkw.services.JdkWrapperPreferencesService
 import io.github.cwbriones.jdkw.services.JdkWrapperService
 import io.github.cwbriones.jdkw.unwrap
 
@@ -24,14 +25,19 @@ class ImportJdk : AnAction() {
         val project = e.project.unwrap("Expected project on action")
         val notifier = Notifier(project)
         val projectDir = project.guessProjectDir().unwrap("Could not infer project dir.")
-        project.service<JdkWrapperService>().inferWrapperConfig(projectDir) {
+        project.service<JdkWrapperService>().inferWrapperConfig(projectDir) { config ->
             val service = project.service<JdkWrapperService>()
             notifier.info {
-                setContent("JDK import from home directory: ${it.javaHome}")
+                setContent("JDK import from home directory: ${config.javaHome}")
                 setImportant(false)
             }
-            val sdk = service.findExistingJdk(it.javaHome) ?: service.importJdk(it.javaHome)
+            val sdk = service.findExistingJdk(config.javaHome) ?: service.importJdk(config.javaHome)
             service.configureJdkForProject(sdk)
+
+            val jdkId = service.jdkwId(projectDir)
+
+            val preferences = project.service<JdkWrapperPreferencesService>()
+            preferences.lastImportedId = jdkId
             notifier.info {
                 setContent(Bundle.getMessage("autodetect.import.completed"))
             }

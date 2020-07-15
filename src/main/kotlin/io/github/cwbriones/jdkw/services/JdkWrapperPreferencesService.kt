@@ -15,6 +15,7 @@ class JdkWrapperPreferencesService : PersistentStateComponent<JdkWrapperPreferen
      * When true, the plugin should suggest an import if one is available.
      */
     var suggestAvailableImport: Boolean = true
+    var lastImportedId: String? = null
 
     override fun getState(): JdkWrapperPreferencesService = this
 
