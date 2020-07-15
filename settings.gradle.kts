@@ -1,1 +1,1 @@
-rootProject.name = "jdkw-intellij"
+rootProject.name = "jdkw-intellij-plugin"
