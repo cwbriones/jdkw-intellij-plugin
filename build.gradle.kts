@@ -37,7 +37,7 @@ dependencies {
 // Configure gradle-intellij-plugin plugin.
 // Read more: https://github.com/JetBrains/gradle-intellij-plugin
 intellij {
-    pluginName = "jdkw-wrapper"
+    pluginName = "jdkw-intellij-plugin"
     version = "2019.3"
     type = "IC"
     downloadSources = true
