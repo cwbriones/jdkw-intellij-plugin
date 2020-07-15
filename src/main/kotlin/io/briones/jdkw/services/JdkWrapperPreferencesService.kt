@@ -7,8 +7,8 @@ import com.intellij.openapi.components.StoragePathMacros
 import com.intellij.util.xmlb.XmlSerializerUtil
 
 @State(
-        name = "JdkWrapper",
-        storages = [Storage(StoragePathMacros.WORKSPACE_FILE)]
+    name = "JdkWrapper",
+    storages = [Storage(StoragePathMacros.WORKSPACE_FILE)]
 )
 class JdkWrapperPreferencesService : PersistentStateComponent<JdkWrapperPreferencesService> {
     /**

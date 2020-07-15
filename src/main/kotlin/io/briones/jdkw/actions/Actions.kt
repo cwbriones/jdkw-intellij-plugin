@@ -1,12 +1,14 @@
 package io.briones.jdkw.actions
 
-import io.briones.jdkw.Bundle
-import io.briones.jdkw.Notifier
-import io.briones.jdkw.services.JdkWrapperConfig
-import io.briones.jdkw.services.JdkWrapperService
-import com.intellij.openapi.actionSystem.*
+import com.intellij.openapi.actionSystem.ActionManager
+import com.intellij.openapi.actionSystem.AnAction
+import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.guessProjectDir
+import io.briones.jdkw.Bundle
+import io.briones.jdkw.Notifier
+import io.briones.jdkw.services.JdkWrapperService
+import io.briones.jdkw.unwrap
 
 /**
  * Convenience function to locate an action using its class name.
@@ -15,14 +17,14 @@ import com.intellij.openapi.project.guessProjectDir
  *
  * @see ActionManager.getAction
  */
-inline fun <reified T : AnAction> getAction(): AnAction
-        = ActionManager.getInstance().getAction(T::class.java.name)
+inline fun <reified T : AnAction> getAction(): AnAction = ActionManager.getInstance().getAction(T::class.java.name)
 
 class ImportJdk : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
-        val project = e.project!!
+        val project = e.project.unwrap("Expected project on action")
         val notifier = Notifier(project)
-        project.service<JdkWrapperService>().inferWrapperConfig(project.guessProjectDir()!!, fun(it: JdkWrapperConfig) {
+        val projectDir = project.guessProjectDir().unwrap("Could not infer project dir.")
+        project.service<JdkWrapperService>().inferWrapperConfig(projectDir) {
             val service = project.service<JdkWrapperService>()
             notifier.info {
                 setContent("JDK import from home directory: ${it.javaHome}")
@@ -33,6 +35,6 @@ class ImportJdk : AnAction() {
             notifier.info {
                 setContent(Bundle.getMessage("autodetect.import.completed"))
             }
-        })
+        }
     }
 }

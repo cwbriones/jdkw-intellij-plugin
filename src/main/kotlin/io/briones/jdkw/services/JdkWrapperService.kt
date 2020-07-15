@@ -1,9 +1,11 @@
 package io.briones.jdkw.services
 
-import io.briones.jdkw.getLogger
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.filters.TextConsoleBuilderFactory
-import com.intellij.execution.process.*
+import com.intellij.execution.process.OSProcessHandler
+import com.intellij.execution.process.ProcessEvent
+import com.intellij.execution.process.ProcessListener
+import com.intellij.execution.process.ProcessOutputType
 import com.intellij.history.core.Paths
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.service
@@ -18,6 +20,7 @@ import com.intellij.openapi.util.Key
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.pom.java.LanguageLevel
+import io.briones.jdkw.getLogger
 import java.io.File
 import java.io.FileNotFoundException
 
@@ -29,16 +32,16 @@ class JdkWrapperService(private val project: Project) {
     }
 
     fun configureJdkForProject(sdk: Sdk) {
-            SdkConfigurationUtil.setDirectoryProjectSdk(project, sdk)
-            val languageLevelExt = LanguageLevelProjectExtension.getInstance(project)
-            val languageLevel = languageLevelFromSdk(sdk)
-            if (languageLevel != null) {
-                languageLevelExt.languageLevel = languageLevel
-            }
+        SdkConfigurationUtil.setDirectoryProjectSdk(project, sdk)
+        val languageLevelExt = LanguageLevelProjectExtension.getInstance(project)
+        val languageLevel = languageLevelFromSdk(sdk)
+        if (languageLevel != null) {
+            languageLevelExt.languageLevel = languageLevel
+        }
     }
 
     private fun languageLevelFromSdk(sdk: Sdk): LanguageLevel? =
-            JavaSdk.getInstance().getVersion(sdk)?.maxLanguageLevel
+        JavaSdk.getInstance().getVersion(sdk)?.maxLanguageLevel
 
     fun inferWrapperConfig(contentRoot: VirtualFile, callback: (JdkWrapperConfig) -> Unit) {
         logger.info("looking for jdk-wrapper.sh")
@@ -47,16 +50,16 @@ class JdkWrapperService(private val project: Project) {
             logger.info("found - executing")
 
             val commandLine = GeneralCommandLine("./jdk-wrapper.sh")
-                    .withWorkDirectory(jdkWrapper.parent.canonicalPath)
-                    .withParameters("bash", "-c", "echo \$JAVA_HOME")
+                .withWorkDirectory(jdkWrapper.parent.canonicalPath)
+                .withParameters("bash", "-c", "echo \$JAVA_HOME")
 
             val handler = OSProcessHandler(commandLine)
 
             TextConsoleBuilderFactory
-                    .getInstance()
-                    .createBuilder(project)
-                    .console
-                    .attachToProcess(handler)
+                .getInstance()
+                .createBuilder(project)
+                .console
+                .attachToProcess(handler)
 
             handler.addProcessListener(OutputCapturingListener(callback))
             handler.startNotify()
@@ -65,9 +68,9 @@ class JdkWrapperService(private val project: Project) {
     }
 
     fun findExistingJdk(javaHomePath: String): Sdk? =
-            service<ProjectJdkTable>().allJdks.find {
-                it.homePath == javaHomePath
-            }
+        service<ProjectJdkTable>().allJdks.find {
+            it.homePath == javaHomePath
+        }
 
     fun importJdk(javaHomePath: String): Sdk {
         val javaHome = writeAction {
@@ -76,17 +79,18 @@ class JdkWrapperService(private val project: Project) {
 
         val javaSdkType = JavaSdk.getInstance()
         val sdk = SdkConfigurationUtil.setupSdk(
-                arrayOf(),
-                javaHome,
-                javaSdkType,
-                true,
-                null,
-                sdkName(javaSdkType, javaHome.canonicalPath!!)
+            arrayOf(),
+            javaHome,
+            javaSdkType,
+            true,
+            null,
+            sdkName(javaSdkType, javaHome.path)
         ) ?: throw IllegalStateException("Unable to setup JDK")
         SdkConfigurationUtil.addSdk(sdk)
         return sdk
     }
 
+    @Suppress("ReturnCount")
     private fun sdkName(sdkType: SdkType, sdkHome: String): String {
         val suggestedName = sdkType.suggestSdkName(null, sdkHome)
         val components = Paths.split(sdkHome).toMutableList()
@@ -124,13 +128,14 @@ class OutputCapturingListener(private val onTerminate: (JdkWrapperConfig) -> Uni
         if (event.exitCode == 0) {
             ApplicationManager.getApplication().invokeLater {
                 val config = JdkWrapperConfig(
-                        javaHome = allText.joinToString(transform = String::trim)
+                    javaHome = allText.joinToString(transform = String::trim)
                 )
                 onTerminate(config)
             }
         }
     }
 
-    override fun processWillTerminate(event: ProcessEvent, willBeDestroyed: Boolean) {}
-    override fun startNotified(event: ProcessEvent) {}
+    override fun processWillTerminate(event: ProcessEvent, willBeDestroyed: Boolean) { /* unused */ }
+
+    override fun startNotified(event: ProcessEvent) { /* unused */ }
 }
