@@ -6,7 +6,6 @@ import com.intellij.execution.process.OSProcessHandler
 import com.intellij.execution.process.ProcessEvent
 import com.intellij.execution.process.ProcessListener
 import com.intellij.execution.process.ProcessOutputType
-import com.intellij.history.core.Paths
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.service
@@ -14,7 +13,6 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.projectRoots.JavaSdk
 import com.intellij.openapi.projectRoots.ProjectJdkTable
 import com.intellij.openapi.projectRoots.Sdk
-import com.intellij.openapi.projectRoots.SdkType
 import com.intellij.openapi.projectRoots.impl.SdkConfigurationUtil
 import com.intellij.openapi.roots.LanguageLevelProjectExtension
 import com.intellij.openapi.util.Computable
@@ -26,6 +24,7 @@ import com.intellij.pom.java.LanguageLevel
 import io.github.cwbriones.jdkw.getLogger
 import java.io.File
 import java.io.FileNotFoundException
+import java.nio.file.Paths
 import java.security.MessageDigest
 
 data class JdkWrapperConfig(val javaHome: String)
@@ -38,8 +37,10 @@ class JdkWrapperService(private val project: Project) : Disposable {
     fun usesWrapper(contentRoot: VirtualFile) = contentRoot.findChild("jdk-wrapper.sh")?.exists() ?: false
 
     fun jdkwId(contentRoot: VirtualFile): String {
-        val jdkw= contentRoot.findChild(".jdkw") ?: return ""
-        val contents = ApplicationManager.getApplication().runReadAction(Computable<ByteArray>(jdkw::contentsToByteArray))
+        val jdkw = contentRoot.findChild(".jdkw") ?: return ""
+        val contents = ApplicationManager
+            .getApplication()
+            .runReadAction(Computable<ByteArray>(jdkw::contentsToByteArray))
         val shaDigest = MessageDigest.getInstance("SHA-256")
         return shaDigest.digest(contents).joinToString("") {
             String.format("%02x", it)
@@ -102,13 +103,15 @@ class JdkWrapperService(private val project: Project) : Disposable {
         } ?: throw FileNotFoundException("Unable to locate java home directory")
 
         val javaSdkType = JavaSdk.getInstance()
+        val suggestedName = javaSdkType.suggestSdkName(null, javaHomePath)
+        val distSuffix = getDistSuffix(javaHomePath) ?: ""
         val sdk = SdkConfigurationUtil.setupSdk(
             arrayOf(),
             javaHome,
             javaSdkType,
             true,
             null,
-            sdkName(javaSdkType, javaHome.path)
+            sequenceOf(suggestedName, distSuffix).joinToString(" ")
         ) ?: throw IllegalStateException("Unable to setup JDK")
         SdkConfigurationUtil.addSdk(sdk)
         return sdk
@@ -116,29 +119,21 @@ class JdkWrapperService(private val project: Project) : Disposable {
 
     override fun dispose() { /* unused */ }
 
-    @Suppress("ReturnCount")
-    private fun sdkName(sdkType: SdkType, sdkHome: String): String {
-        val suggestedName = sdkType.suggestSdkName(null, sdkHome)
-        val components = Paths.split(sdkHome).toMutableList()
-        if (components.pop() != "Home") {
-            return suggestedName
+    private fun getDistSuffix(sdkHome: String): String? {
+        var sdkHomePath = Paths.get(sdkHome)
+        if (!sdkHomePath.endsWith(Paths.get("Contents", "Home"))) {
+            return null
         }
-        if (components.pop() != "Contents") {
-            return suggestedName
-        }
-        return components.last()?.let { "$suggestedName (${extractDist(it)})" } ?: suggestedName
+        sdkHomePath = sdkHomePath.parent.parent
+        val (dist, _, build) = sdkHomePath.fileName.toString().split("_")
+        return "($dist, $build)"
     }
+}
 
-    private fun extractDist(distId: String): String {
-        val (dist, _, build) = distId.split("_")
-        return "$dist, $build"
-    }
+private fun <T> writeAction(f: () -> T): T = ApplicationManager.getApplication().runWriteAction<T>(f)
 
-    private fun <T, L : MutableList<T>> L.pop(): T? {
-        return if (isEmpty()) null else removeAt(size - 1)
-    }
-
-    private fun <T> writeAction(f: () -> T): T = ApplicationManager.getApplication().runWriteAction<T>(f)
+private fun <T, L : MutableList<T>> L.pop(): T? {
+    return if (isEmpty()) null else removeAt(size - 1)
 }
 
 class OutputCapturingListener(private val onTerminate: (JdkWrapperConfig) -> Unit) : ProcessListener {

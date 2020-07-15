@@ -56,7 +56,8 @@ class JdkWrapperListener : StartupActivity {
         }
     }
 
-    fun needsJdkImport(project: Project, contentRoot: VirtualFile) : Boolean {
+    @Suppress("ReturnCount")
+    private fun needsJdkImport(project: Project, contentRoot: VirtualFile): Boolean {
         val jdkwService = project.service<JdkWrapperService>()
         val preferences = project.service<JdkWrapperPreferencesService>()
         if (!preferences.suggestAvailableImport) {
