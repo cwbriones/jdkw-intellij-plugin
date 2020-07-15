@@ -1,4 +1,4 @@
-package com.github.cwbriones.jdkw
+package io.briones.jdkw
 
 import com.intellij.notification.Notification
 import com.intellij.notification.NotificationDisplayType
@@ -9,7 +9,7 @@ import com.intellij.openapi.project.Project
 class Notifier(private val project: Project) {
     companion object {
         private val NOTIFICATION_GROUP = NotificationGroup(
-                "JDKW Importer",
+                "JDK Wrapper Auto Import",
                 NotificationDisplayType.BALLOON,
                 true
         )

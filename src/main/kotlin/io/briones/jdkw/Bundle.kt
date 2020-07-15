@@ -1,4 +1,4 @@
-package com.github.cwbriones.jdkw
+package io.briones.jdkw
 
 import com.intellij.AbstractBundle
 import org.jetbrains.annotations.NonNls

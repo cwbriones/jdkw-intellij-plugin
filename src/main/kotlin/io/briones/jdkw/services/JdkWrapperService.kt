@@ -1,6 +1,6 @@
-package com.github.cwbriones.jdkw.services
+package io.briones.jdkw.services
 
-import com.github.cwbriones.jdkw.ext.getLogger
+import io.briones.jdkw.getLogger
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.filters.TextConsoleBuilderFactory
 import com.intellij.execution.process.OSProcessHandler
@@ -103,7 +103,7 @@ class OutputCapturingListener(private val onTerminate: (JdkWrapperConfig) -> Uni
         if (event.exitCode == 0) {
             ApplicationManager.getApplication().invokeLater {
                 val config = JdkWrapperConfig(
-                    javaHome = allText.joinToString(transform = String::trim)
+                        javaHome = allText.joinToString(transform = String::trim)
                 )
                 onTerminate(config)
             }

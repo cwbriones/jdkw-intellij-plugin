@@ -1,4 +1,4 @@
-package com.github.cwbriones.jdkw.ext
+package io.briones.jdkw
 
 import com.intellij.openapi.diagnostic.Logger
 

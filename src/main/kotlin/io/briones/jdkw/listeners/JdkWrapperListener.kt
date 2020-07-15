@@ -1,13 +1,13 @@
-package com.github.cwbriones.jdkw.listeners
+package io.briones.jdkw.listeners
 
-import com.github.cwbriones.jdkw.Bundle
-import com.github.cwbriones.jdkw.Notifier
-import com.github.cwbriones.jdkw.actions.ImportJdk
-import com.github.cwbriones.jdkw.actions.getAction
-import com.github.cwbriones.jdkw.ext.getLogger
-import com.github.cwbriones.jdkw.services.JdkWrapperConfig
-import com.github.cwbriones.jdkw.services.JdkWrapperService
-import com.github.cwbriones.jdkw.services.JdkwPreferencesService
+import io.briones.jdkw.Bundle
+import io.briones.jdkw.Notifier
+import io.briones.jdkw.actions.ImportJdk
+import io.briones.jdkw.actions.getAction
+import io.briones.jdkw.getLogger
+import io.briones.jdkw.services.JdkWrapperConfig
+import io.briones.jdkw.services.JdkWrapperService
+import io.briones.jdkw.services.JdkWrapperPreferencesService
 import com.intellij.notification.Notification
 import com.intellij.notification.NotificationAction
 import com.intellij.openapi.actionSystem.AnActionEvent
@@ -27,7 +27,7 @@ class JdkWrapperListener : StartupActivity {
 
     override fun runActivity(project: Project) {
         logger.debug("Received project open event: ${project.name}")
-        if (!project.service<JdkwPreferencesService>().suggestAvailableImport) {
+        if (!project.service<JdkWrapperPreferencesService>().suggestAvailableImport) {
             return
         }
         project.service<JdkWrapperService>().inferWrapperConfig(project.guessProjectDir()!!, fun(it: JdkWrapperConfig) {
@@ -42,7 +42,7 @@ class JdkWrapperListener : StartupActivity {
                             notification.expire()
                         })
                         addAction(NotificationAction.create(Bundle.message("autodetect.dismiss")) { e: AnActionEvent, notification: Notification ->
-                            e.project!!.service<JdkwPreferencesService>().suggestAvailableImport = false
+                            e.project!!.service<JdkWrapperPreferencesService>().suggestAvailableImport = false
                             notification.expire()
                         })
                     }

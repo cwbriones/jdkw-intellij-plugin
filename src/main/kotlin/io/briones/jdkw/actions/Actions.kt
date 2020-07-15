@@ -1,9 +1,9 @@
-package com.github.cwbriones.jdkw.actions
+package io.briones.jdkw.actions
 
-import com.github.cwbriones.jdkw.Bundle
-import com.github.cwbriones.jdkw.Notifier
-import com.github.cwbriones.jdkw.services.JdkWrapperConfig
-import com.github.cwbriones.jdkw.services.JdkWrapperService
+import io.briones.jdkw.Bundle
+import io.briones.jdkw.Notifier
+import io.briones.jdkw.services.JdkWrapperConfig
+import io.briones.jdkw.services.JdkWrapperService
 import com.intellij.openapi.actionSystem.*
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.guessProjectDir
