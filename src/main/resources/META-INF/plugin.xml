@@ -1,6 +1,11 @@
 <idea-plugin>
     <id>com.github.cwbriones</id>
-    <name>jdkw-intellij</name>
+    <name>jdk-wrapper</name>
+    <description>
+        Auto-import the configured JDK for projects using jdk-wrapper.
+
+        See https://github.com/KoskiLabs/jdk-wrapper.
+    </description>
     <vendor>cwbriones</vendor>
 
     <!-- Product and plugin compatibility requirements -->
@@ -11,13 +16,14 @@
 
     <extensions defaultExtensionNs="com.intellij">
         <projectService serviceImplementation="com.github.cwbriones.jdkw.services.JdkWrapperService"/>
+        <projectService serviceImplementation="com.github.cwbriones.jdkw.services.JdkwPreferencesService"/>
         <postStartupActivity implementation="com.github.cwbriones.jdkw.listeners.JdkWrapperListener"/>
     </extensions>
     <projectListeners>
     </projectListeners>
     <actions>
         <action id="com.github.cwbriones.jdkw.actions.ImportJdk" class="com.github.cwbriones.jdkw.actions.ImportJdk"
-            text="Import Wrapper JDK" description="Infer and import JDK from jdk-wrapper.sh">
+            text="Import from JDK Wrapper" description="Infer and import JDK from jdk-wrapper.sh">
             <add-to-group group-id="ToolsMenu" anchor="last" />
         </action>
     </actions>

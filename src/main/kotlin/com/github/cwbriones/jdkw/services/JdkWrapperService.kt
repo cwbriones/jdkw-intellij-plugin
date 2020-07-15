@@ -1,17 +1,15 @@
 package com.github.cwbriones.jdkw.services
 
-import com.github.cwbriones.jdkw.MyBundle
-import com.github.cwbriones.jdkw.Notifier
 import com.github.cwbriones.jdkw.ext.getLogger
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.filters.TextConsoleBuilderFactory
 import com.intellij.execution.process.OSProcessHandler
 import com.intellij.execution.process.ProcessEvent
 import com.intellij.execution.process.ProcessListener
+import com.intellij.execution.process.ProcessTerminatedListener
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.project.guessProjectDir
 import com.intellij.openapi.projectRoots.JavaSdk
 import com.intellij.openapi.projectRoots.ProjectJdkTable
 import com.intellij.openapi.projectRoots.Sdk
@@ -24,13 +22,11 @@ import com.intellij.pom.java.LanguageLevel
 import java.io.File
 import java.io.FileNotFoundException
 
+data class JdkWrapperConfig(val javaHome: String)
+
 class JdkWrapperService(private val project: Project) {
     companion object {
         val logger = getLogger<JdkWrapperService>()
-    }
-
-    init {
-        println(MyBundle.message("projectService", project.name))
     }
 
     fun configureJdkForProject(sdk: Sdk) {
@@ -45,8 +41,7 @@ class JdkWrapperService(private val project: Project) {
     private fun languageLevelFromSdk(sdk: Sdk): LanguageLevel? =
             JavaSdk.getInstance().getVersion(sdk)?.maxLanguageLevel
 
-    fun inferJdk(contentRoot: VirtualFile, callback: (String) -> Unit) {
-        println("looking for jdk-wrapper.sh")
+    fun inferWrapperConfig(contentRoot: VirtualFile, callback: (JdkWrapperConfig) -> Unit) {
         logger.info("looking for jdk-wrapper.sh")
         val jdkWrapper = contentRoot.findChild("jdk-wrapper.sh")
         if (jdkWrapper != null && jdkWrapper.exists()) {
@@ -57,36 +52,17 @@ class JdkWrapperService(private val project: Project) {
                     .withParameters("bash", "-c", "echo \$JAVA_HOME")
 
             val handler = OSProcessHandler(commandLine)
-
+            handler.addProcessListener(OutputCapturingListener(callback))
+            ProcessTerminatedListener.attach(handler, project, "JDK Wrapper Import")
             TextConsoleBuilderFactory
                     .getInstance()
                     .createBuilder(project)
                     .console
                     .attachToProcess(handler)
 
-            val allText = mutableListOf<String>()
             handler.startNotify()
-//            handler.waitFor(5000)
-            handler.addProcessListener(object : ProcessListener {
-                override fun onTextAvailable(event: ProcessEvent, outputType: Key<*>) {
-                    allText.add(event.text)
-                }
-
-                override fun processTerminated(event: ProcessEvent) {
-                    if (event.exitCode == 0) {
-                        ApplicationManager.getApplication().invokeLater {
-                            callback(allText.joinToString(transform = String::trim))
-                        }
-                        // Success!
-                    }
-                }
-
-                override fun processWillTerminate(event: ProcessEvent, willBeDestroyed: Boolean) {}
-                override fun startNotified(event: ProcessEvent) {}
-            })
             return
         }
-        println("nada")
     }
 
     fun findExistingJdk(javaHomePath: String): Sdk? =
@@ -100,17 +76,40 @@ class JdkWrapperService(private val project: Project) {
         } ?: throw FileNotFoundException("Unable to locate java home directory")
 
         val javaSdkType = JavaSdk.getInstance()
+        val suggestedName = javaSdkType.suggestSdkName(null, javaHome.canonicalPath)
         val sdk = SdkConfigurationUtil.setupSdk(
                 arrayOf(),
                 javaHome,
                 javaSdkType,
                 true,
                 null,
-                javaSdkType.suggestSdkName(null, javaHome.canonicalPath)
+                suggestedName
         ) ?: throw IllegalStateException("Unable to setup JDK")
         SdkConfigurationUtil.addSdk(sdk)
         return sdk
     }
 
     private fun <T> writeAction(f: () -> T): T = ApplicationManager.getApplication().runWriteAction<T>(f)
+}
+
+class OutputCapturingListener(private val onTerminate: (JdkWrapperConfig) -> Unit) : ProcessListener {
+    private val allText: MutableList<String> = mutableListOf()
+
+    override fun onTextAvailable(event: ProcessEvent, outputType: Key<*>) {
+        allText.add(event.text)
+    }
+
+    override fun processTerminated(event: ProcessEvent) {
+        if (event.exitCode == 0) {
+            ApplicationManager.getApplication().invokeLater {
+                val config = JdkWrapperConfig(
+                    javaHome = allText.joinToString(transform = String::trim)
+                )
+                onTerminate(config)
+            }
+        }
+    }
+
+    override fun processWillTerminate(event: ProcessEvent, willBeDestroyed: Boolean) {}
+    override fun startNotified(event: ProcessEvent) {}
 }
