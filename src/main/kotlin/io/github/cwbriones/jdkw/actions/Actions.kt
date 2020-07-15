@@ -1,14 +1,14 @@
-package io.briones.jdkw.actions
+package io.github.cwbriones.jdkw.actions
 
 import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.guessProjectDir
-import io.briones.jdkw.Bundle
-import io.briones.jdkw.Notifier
-import io.briones.jdkw.services.JdkWrapperService
-import io.briones.jdkw.unwrap
+import io.github.cwbriones.jdkw.Bundle
+import io.github.cwbriones.jdkw.Notifier
+import io.github.cwbriones.jdkw.services.JdkWrapperService
+import io.github.cwbriones.jdkw.unwrap
 
 /**
  * Convenience function to locate an action using its class name.

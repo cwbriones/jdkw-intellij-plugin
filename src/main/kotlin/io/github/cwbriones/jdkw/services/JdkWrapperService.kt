@@ -1,4 +1,4 @@
-package io.briones.jdkw.services
+package io.github.cwbriones.jdkw.services
 
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.filters.TextConsoleBuilderFactory
@@ -20,7 +20,7 @@ import com.intellij.openapi.util.Key
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.pom.java.LanguageLevel
-import io.briones.jdkw.getLogger
+import io.github.cwbriones.jdkw.getLogger
 import java.io.File
 import java.io.FileNotFoundException
 

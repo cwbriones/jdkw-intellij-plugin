@@ -1,11 +1,5 @@
 <idea-plugin>
-    <id>com.github.cwbriones</id>
     <name>JDK Wrapper</name>
-    <description>
-        Auto-import the configured JDK for projects using jdk-wrapper.
-
-        See https://github.com/KoskiLabs/jdk-wrapper.
-    </description>
     <vendor>cwbriones</vendor>
 
     <!-- Product and plugin compatibility requirements -->
@@ -15,14 +9,14 @@
     <depends>com.intellij.modules.java</depends>
 
     <extensions defaultExtensionNs="com.intellij">
-        <projectService serviceImplementation="io.briones.jdkw.services.JdkWrapperService"/>
-        <projectService serviceImplementation="io.briones.jdkw.services.JdkWrapperPreferencesService"/>
-        <postStartupActivity implementation="io.briones.jdkw.listeners.JdkWrapperListener"/>
+        <projectService serviceImplementation="io.github.cwbriones.jdkw.services.JdkWrapperService"/>
+        <projectService serviceImplementation="io.github.cwbriones.jdkw.services.JdkWrapperPreferencesService"/>
+        <postStartupActivity implementation="io.github.cwbriones.jdkw.listeners.JdkWrapperListener"/>
     </extensions>
     <projectListeners>
     </projectListeners>
     <actions>
-        <action id="io.briones.jdkw.actions.ImportJdk" class="io.briones.jdkw.actions.ImportJdk"
+        <action id="io.github.cwbriones.jdkw.actions.ImportJdk" class="io.github.cwbriones.jdkw.actions.ImportJdk"
             text="Import from JDK Wrapper" description="Import JDK from jdk-wrapper.sh">
             <add-to-group group-id="ToolsMenu" anchor="last" />
         </action>

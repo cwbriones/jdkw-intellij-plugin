@@ -18,18 +18,10 @@ plugins {
     id("org.jlleitschuh.gradle.ktlint") version "9.2.1"
 }
 
-// Import variables from gradle.properties file
-val pluginGroup: String by project
-val pluginName: String by project
-val pluginVersion: String by project
-val pluginSinceBuild: String by project
-val pluginUntilBuild: String by project
+val pluginVersion: String = "0.1.0"
+val jvmTarget: String = "1.8"
 
-val platformType: String by project
-val platformVersion: String by project
-val platformDownloadSources: String by project
-
-group = pluginGroup
+group = "io.github.cwbriones.jdkw"
 version = pluginVersion
 
 // Configure project's dependencies
@@ -45,10 +37,10 @@ dependencies {
 // Configure gradle-intellij-plugin plugin.
 // Read more: https://github.com/JetBrains/gradle-intellij-plugin
 intellij {
-    pluginName = pluginName
-    version = platformVersion
-    type = platformType
-    downloadSources = platformDownloadSources.toBoolean()
+    pluginName = "jdkw-wrapper"
+    version = "2019.3"
+    type = "IC"
+    downloadSources = true
     updateSinceUntilBuild = true
 
 //  Plugin Dependencies:
@@ -70,25 +62,26 @@ detekt {
 }
 
 tasks {
-    // Set the compatibility versions to 1.8
     withType<JavaCompile> {
-        sourceCompatibility = "1.8"
-        targetCompatibility = "1.8"
+        sourceCompatibility = jvmTarget
+        targetCompatibility = jvmTarget
     }
     listOf("compileKotlin", "compileTestKotlin").forEach {
         getByName<KotlinCompile>(it) {
-            kotlinOptions.jvmTarget = "1.8"
+            kotlinOptions.jvmTarget = jvmTarget
         }
     }
-
+    // shadowed by Detekt.jvmTarget
+    val projectJvmTarget = jvmTarget
     withType<Detekt> {
-        jvmTarget = "1.8"
+        jvmTarget = projectJvmTarget
     }
 
     patchPluginXml {
+        pluginId("io.github.cwbriones.jdkw")
         version(pluginVersion)
-        sinceBuild(pluginSinceBuild)
-        untilBuild(pluginUntilBuild)
+        sinceBuild("193")
+        untilBuild("201.*")
 
         // Extract the <!-- Plugin description --> section from README.md and provide for the plugin's manifest
         pluginDescription(closure {

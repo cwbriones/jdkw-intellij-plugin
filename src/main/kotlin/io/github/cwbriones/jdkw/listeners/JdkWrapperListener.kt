@@ -1,17 +1,17 @@
-package io.briones.jdkw.listeners
+package io.github.cwbriones.jdkw.listeners
 
 import com.intellij.notification.NotificationAction
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.guessProjectDir
 import com.intellij.openapi.startup.StartupActivity
-import io.briones.jdkw.Bundle
-import io.briones.jdkw.Notifier
-import io.briones.jdkw.actions.ImportJdk
-import io.briones.jdkw.actions.getAction
-import io.briones.jdkw.getLogger
-import io.briones.jdkw.services.JdkWrapperPreferencesService
-import io.briones.jdkw.services.JdkWrapperService
+import io.github.cwbriones.jdkw.Bundle
+import io.github.cwbriones.jdkw.Notifier
+import io.github.cwbriones.jdkw.actions.ImportJdk
+import io.github.cwbriones.jdkw.actions.getAction
+import io.github.cwbriones.jdkw.getLogger
+import io.github.cwbriones.jdkw.services.JdkWrapperPreferencesService
+import io.github.cwbriones.jdkw.services.JdkWrapperService
 
 class JdkWrapperListener : StartupActivity {
     companion object {

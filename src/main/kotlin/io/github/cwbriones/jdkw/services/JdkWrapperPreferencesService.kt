@@ -1,4 +1,4 @@
-package io.briones.jdkw.services
+package io.github.cwbriones.jdkw.services
 
 import com.intellij.openapi.components.PersistentStateComponent
 import com.intellij.openapi.components.State
