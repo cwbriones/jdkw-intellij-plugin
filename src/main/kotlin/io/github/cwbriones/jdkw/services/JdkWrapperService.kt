@@ -7,6 +7,7 @@ import com.intellij.execution.process.ProcessEvent
 import com.intellij.execution.process.ProcessListener
 import com.intellij.execution.process.ProcessOutputType
 import com.intellij.history.core.Paths
+import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
@@ -17,6 +18,7 @@ import com.intellij.openapi.projectRoots.SdkType
 import com.intellij.openapi.projectRoots.impl.SdkConfigurationUtil
 import com.intellij.openapi.roots.LanguageLevelProjectExtension
 import com.intellij.openapi.util.Computable
+import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.util.Key
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFile
@@ -28,7 +30,7 @@ import java.security.MessageDigest
 
 data class JdkWrapperConfig(val javaHome: String)
 
-class JdkWrapperService(private val project: Project) {
+class JdkWrapperService(private val project: Project) : Disposable {
     companion object {
         val logger = getLogger<JdkWrapperService>()
     }
@@ -74,11 +76,14 @@ class JdkWrapperService(private val project: Project) {
 
             val handler = OSProcessHandler(commandLine)
 
-            TextConsoleBuilderFactory
-                .getInstance()
-                .createBuilder(project)
-                .console
-                .attachToProcess(handler)
+            val console =
+                TextConsoleBuilderFactory
+                    .getInstance()
+                    .createBuilder(project)
+                    .console
+
+            console.attachToProcess(handler)
+            Disposer.register(this, console)
 
             handler.addProcessListener(OutputCapturingListener(callback))
             handler.startNotify()
@@ -108,6 +113,8 @@ class JdkWrapperService(private val project: Project) {
         SdkConfigurationUtil.addSdk(sdk)
         return sdk
     }
+
+    override fun dispose() { /* unused */ }
 
     @Suppress("ReturnCount")
     private fun sdkName(sdkType: SdkType, sdkHome: String): String {
