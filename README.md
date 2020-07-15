@@ -21,7 +21,7 @@ Auto import the configured JDK for projects using [JDK Wrapper](https://github.c
 
 - Using IDE built-in plugin system:
   
-  <kbd>Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>Marketplace</kbd> > <kbd>Search for "jdkw-intellij-plugin"</kbd> >
+  <kbd>Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>Marketplace</kbd> > <kbd>Search for "JDK Wrapper"</kbd> >
   <kbd>Install Plugin</kbd>
   
 - Manually:

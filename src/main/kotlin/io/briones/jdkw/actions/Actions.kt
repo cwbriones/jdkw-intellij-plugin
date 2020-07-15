@@ -24,11 +24,11 @@ class ImportJdk : AnAction() {
         val notifier = Notifier(project)
         project.service<JdkWrapperService>().inferWrapperConfig(project.guessProjectDir()!!, fun(it: JdkWrapperConfig) {
             val service = project.service<JdkWrapperService>()
-            val sdk = service.findExistingJdk(it.javaHome) ?: service.importJdk(it.javaHome)
             notifier.info {
-                setContent("JDK import from home directory: ${sdk.homePath}")
+                setContent("JDK import from home directory: ${it.javaHome}")
                 setImportant(false)
             }
+            val sdk = service.findExistingJdk(it.javaHome) ?: service.importJdk(it.javaHome)
             service.configureJdkForProject(sdk)
             notifier.info {
                 setContent(Bundle.getMessage("autodetect.import.completed"))
